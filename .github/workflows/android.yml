@@ -17,15 +17,26 @@ jobs:
       - name: Clone Love-Android
         run: git clone --depth 1 https://github.com/love2d/love-android.git
 
-      - name: Prepare Assets and Build
+      - name: Prepare Assets
         run: |
-          # Создаем папку для игры, если её нет
+          # Создаем папку assets, если её нет
           mkdir -p love-android/app/src/main/assets/
-          # Пакуем всё, что у тебя в репозитории, в игру
-          zip -9 -r game.love . -x "./love-android/*" "./.git/*" "./.github/*"
-          # Копируем в проект
+          # Удаляем старые архивы, если они были
+          rm -f game.love
+          # Упаковываем всё, что есть в корне репозитория (кроме папки самого андроид-проекта)
+          zip -9 -r game.love . -x "love-android/*" ".git/*" ".github/*"
+          # Копируем свежий файл в проект
           cp game.love love-android/app/src/main/assets/
-          # Запускаем сборку
+
+      - name: Build APK
+        run: |
           cd love-android
           chmod +x gradlew
-          ./gradlew assembleDebug --stacktrace
+          # Запускаем сборку без лишних проверок (lint), чтобы не тупило
+          ./gradlew assembleDebug -x lint
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-game-debug-apk
+          path: love-android/app/build/outputs/apk/debug/app-debug.apk
