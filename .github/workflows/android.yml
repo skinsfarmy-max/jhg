@@ -8,32 +8,30 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # LÖVE сейчас требует Java 17 для стабильной сборки
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: 'gradle'
 
       - name: Clone Love-Android
         run: git clone --depth 1 https://github.com/love2d/love-android.git
 
       - name: Prepare Assets
         run: |
-          # Создаем папку assets, если её нет
           mkdir -p love-android/app/src/main/assets/
-          # Удаляем старые архивы, если они были
-          rm -f game.love
-          # Упаковываем всё, что есть в корне репозитория (кроме папки самого андроид-проекта)
+          # Пакуем все файлы из корня твоего репозитория
           zip -9 -r game.love . -x "love-android/*" ".git/*" ".github/*"
-          # Копируем свежий файл в проект
           cp game.love love-android/app/src/main/assets/
 
-      - name: Build APK
+      - name: Build with Gradle
         run: |
           cd love-android
           chmod +x gradlew
-          # Запускаем сборку без лишних проверок (lint), чтобы не тупило
-          ./gradlew assembleDebug -x lint
+          # Добавляем --stacktrace, чтобы видеть реальную ошибку, если упадет
+          ./gradlew assembleDebug --stacktrace -x lint
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
