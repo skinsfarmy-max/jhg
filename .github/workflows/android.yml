@@ -5,16 +5,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Build APK
-        uses: love2d/love-android-action@v1
+      # Собираем .love файл (это просто зип твоих файлов)
+      - name: Package .love file
+        run: zip -9 -r mygame.love . -x "./.git/*" "./.github/*"
+
+      # Используем актуальный докер-образ для сборки APK
+      - name: Build APK using Love-Android
+        uses: p0358/love-android-action@v2
         with:
-          project_name: "MyGame" # Название твоей игры
-          love_version: "11.5"   # Версия Love2D
+          project_name: "MyVibeCraft"
+          love_version: "11.5"
+          # Если хочешь свою иконку, положи icon.png в корень папки
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
+      # Загружаем готовый APK (используем v4, как просит GitHub)
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
         with:
           name: my-game-apk
           path: "*.apk"
